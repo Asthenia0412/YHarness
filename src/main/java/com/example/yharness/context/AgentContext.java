@@ -15,6 +15,9 @@ public class AgentContext {
     private String toolExecutionResult;
     private Map<String, Object> metadata = new HashMap<>();
     private String conversationId;
+    
+    // 业务状态存储（销售场景专用）
+    private BusinessState businessState = new BusinessState();
 
     public AgentContext() {
     }
@@ -85,5 +88,13 @@ public class AgentContext {
 
     public void setConversationId(String conversationId) {
         this.conversationId = conversationId;
+    }
+
+    public BusinessState getBusinessState() {
+        return businessState;
+    }
+
+    public void setBusinessState(BusinessState businessState) {
+        this.businessState = businessState;
     }
 }
