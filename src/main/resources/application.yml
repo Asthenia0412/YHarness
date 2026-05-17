@@ -1,0 +1,31 @@
+
+server:
+  port: 8080
+
+yharness:
+  provider:
+    type: OPENAI
+    api-key: ${AI_API_KEY}
+    base-url: https://api.openai.com/v1
+    model: gpt-4o-mini
+    timeout: 30000
+    max-tokens: 4096
+    temperature: 0.7
+  
+  context:
+    system-prompt: |
+      你是一位专业的销售顾问AI助手。你的任务是帮助销售人员生成高质量的销售话术和建议。
+      你可以调用工具来获取产品信息、分析客户、生成销售脚本等。
+      请用友好、专业的语言与用户交流。
+    max-messages: 50
+  
+  hooks:
+    enabled: true
+  
+  react:
+    max-iterations: 10
+    enable-thinking: true
+
+logging:
+  level:
+    com.example.yharness: DEBUG
