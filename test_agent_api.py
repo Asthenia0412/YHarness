@@ -53,7 +53,13 @@ def print_json(data, indent=2, prefix=""):
                 print_json(value, indent, prefix + "  ")
                 print(f"{prefix}{comma}")
             elif isinstance(value, str):
-                print(f'"{value}"{comma}')
+                try:
+                    nested_json = json.loads(value)
+                    print()
+                    print_json(nested_json, indent, prefix + "  ")
+                    print(f"{prefix}{comma}")
+                except (json.JSONDecodeError, ValueError):
+                    print(f'"{value}"{comma}')
             else:
                 print(f"{json.dumps(value)}{comma}")
         print(f"{prefix}}}")
@@ -65,7 +71,12 @@ def print_json(data, indent=2, prefix=""):
                 print_json(item, indent, prefix + "  ")
                 print(f"{prefix}{comma}")
             elif isinstance(item, str):
-                print(f'{prefix}  "{item}"{comma}')
+                try:
+                    nested_json = json.loads(item)
+                    print_json(nested_json, indent, prefix + "  ")
+                    print(f"{prefix}{comma}")
+                except (json.JSONDecodeError, ValueError):
+                    print(f'{prefix}  "{item}"{comma}')
             else:
                 print(f"{prefix}  {json.dumps(item)}{comma}")
         print(f"{prefix}]")

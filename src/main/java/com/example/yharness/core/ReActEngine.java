@@ -167,9 +167,14 @@ public class ReActEngine {
     }
 
     public void registerToolsToContext(AgentContext context) {
-        Map<String, Tool> tools = toolExecutor.getAllTools();
-        for (Tool tool : tools.values()) {
-            context.addToolDefinition(tool.getDefinition());
+        if (context.getToolDefinitions().isEmpty()) {
+            Map<String, Tool> tools = toolExecutor.getAllTools();
+            for (Tool tool : tools.values()) {
+                context.addToolDefinition(tool.getDefinition());
+            }
+            logger.debug("Registered {} tools to context {}", tools.size(), context.getConversationId());
+        } else {
+            logger.debug("Tools already registered for context {}", context.getConversationId());
         }
     }
 }
