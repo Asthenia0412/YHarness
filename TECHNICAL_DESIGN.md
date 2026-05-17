@@ -1,8 +1,8 @@
-# YHarness - 销售Agent框架技术方案
+# YHarness - 股票咨询Agent框架技术方案
 
 ## 1. 项目概述
 
-YHarness 是一个基于 SpringBoot 的 AI Agent 框架，专注于销售场景，支持 ReAct 循环、Context 管理和多 AI Provider 集成。
+YHarness 是一个基于 SpringBoot 的 AI Agent 框架，专注于股票投资咨询场景，支持 ReAct 循环、Context 管理和多 AI Provider 集成。
 
 ### 1.1 核心目标
 
@@ -101,53 +101,54 @@ public class AgentContext {
     // 对话元数据
     private Map<String, Object> metadata;
     
-    // 业务状态存储（销售场景专用）
-    private BusinessState businessState;
+    // 业务状态存储（股票咨询场景专用）
+    private InvestmentState investmentState;
     
     // 对话ID
     private String conversationId;
 }
 ```
 
-### 3.1.1 BusinessState（业务状态）
+### 3.1.1 InvestmentState（投资状态）
 
-销售Agent需要维护丰富的业务状态，以支持复杂的销售流程：
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `currentStage` | `SalesStage` | 当前销售阶段：初步接触/需求分析/方案演示/商务谈判/成交 |
-| `customerProfile` | `CustomerProfile` | 客户画像信息 |
-| `productInterest` | `List<String>` | 客户感兴趣的产品列表 |
-| `dealValue` | `BigDecimal` | 预估成交金额 |
-| `nextAction` | `String` | 下一步行动计划 |
-| `contactHistory` | `List<ContactRecord>` | 接触历史记录 |
-| `objections` | `List<Objection>` | 客户异议记录 |
-| `competitors` | `List<String>` | 竞品信息 |
-
-### 3.1.2 CustomerProfile（客户画像）
+股票咨询Agent需要维护丰富的业务状态，以支持复杂的投资咨询流程：
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| `name` | `String` | 客户姓名 |
-| `company` | `String` | 公司名称 |
-| `title` | `String` | 职位 |
-| `email` | `String` | 邮箱 |
-| `phone` | `String` | 电话 |
-| `industry` | `String` | 所属行业 |
-| `budgetRange` | `String` | 预算范围 |
-| `decisionMaker` | `boolean` | 是否为决策人 |
-| `painPoints` | `List<String>` | 痛点需求 |
+| `currentStage` | `InvestmentStage` | 当前投资阶段：初步咨询/风险评估/持仓分析/股票研究/投资决策/仓位管理 |
+| `investorProfile` | `InvestorProfile` | 投资者画像信息 |
+| `portfolioStocks` | `List<String>` | 持仓股票列表 |
+| `totalInvestment` | `BigDecimal` | 总投资金额 |
+| `currentProfitLoss` | `BigDecimal` | 当前盈亏 |
+| `nextAction` | `String` | 下一步行动建议 |
+| `tradeHistory` | `List<TradeRecord>` | 交易历史记录 |
+| `stockAlerts` | `List<StockAlert>` | 股票预警列表 |
+| `marketConcerns` | `List<String>` | 市场关注点 |
 
-### 3.1.3 SalesStage（销售阶段枚举）
+### 3.1.2 InvestorProfile（投资者画像）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `name` | `String` | 投资者姓名 |
+| `riskTolerance` | `String` | 风险承受能力：保守型/稳健型/激进型 |
+| `investmentExperience` | `String` | 投资经验 |
+| `investmentGoal` | `String` | 投资目标 |
+| `investmentHorizon` | `String` | 投资期限 |
+| `availableFunds` | `String` | 可用资金 |
+| `preferredSectors` | `List<String>` | 偏好行业 |
+| `watchlist` | `List<String>` | 关注股票列表 |
+| `investmentConcerns` | `List<String>` | 投资顾虑 |
+
+### 3.1.3 InvestmentStage（投资阶段枚举）
 
 ```java
-public enum SalesStage {
-    INITIAL_CONTACT("初步接触"),
-    NEEDS_ANALYSIS("需求分析"),
-    SOLUTION_DEMO("方案演示"),
-    COMMERCIAL_NEGOTIATION("商务谈判"),
-    CLOSING("成交"),
-    FOLLOW_UP("跟进");
+public enum InvestmentStage {
+    INITIAL_CONSULTATION("初步咨询"),
+    RISK_ASSESSMENT("风险评估"),
+    PORTFOLIO_ANALYSIS("持仓分析"),
+    STOCK_RESEARCH("股票研究"),
+    INVESTMENT_DECISION("投资决策"),
+    POSITION_MANAGEMENT("仓位管理");
 }
 ```
 
@@ -312,20 +313,20 @@ yharness:
   provider:
     type: OPENAI  # OPENAI / ANTHROPIC
     api-key: ${AI_API_KEY}
-    base-url: https://api.openai.com/v1
-    model: gpt-4o-mini
+    base-url: https://api.deepseek.com
+    model: deepseek-v4-pro
     timeout: 30000
     max-tokens: 4096
     temperature: 0.7
   
   context:
-    system-prompt: "你是一位专业的销售顾问..."
+    system-prompt: "你是一位专业的股票投资顾问AI助手..."
     max-messages: 50
   
   hooks:
     enabled: true
     packages:
-      - com.example.yharness.hooks
+      - com.yancy.yharness.hooks
   
   react:
     max-iterations: 10
@@ -349,7 +350,7 @@ public class AgentProperties {
 ## 8. 目录结构
 
 ```
-src/main/java/com/example/yharness/
+src/main/java/com/yancy/yharness/
 ├── YHarnessApplication.java      # 启动类
 ├── core/                         # ReAct核心
 │   ├── ReActEngine.java          # ReAct引擎
@@ -363,6 +364,11 @@ src/main/java/com/example/yharness/
 │   ├── ToolDefinition.java       # 工具定义
 │   ├── ToolParameter.java        # 工具参数
 │   ├── LongTermMemory.java       # 长期记忆
+│   ├── InvestmentState.java      # 投资状态
+│   ├── InvestmentStage.java      # 投资阶段枚举
+│   ├── InvestorProfile.java      # 投资者画像
+│   ├── TradeRecord.java          # 交易记录
+│   ├── StockAlert.java           # 股票预警
 │   └── ContextManager.java       # 上下文管理器
 ├── provider/                     # Provider层
 │   ├── AIProvider.java           # Provider接口
@@ -380,9 +386,12 @@ src/main/java/com/example/yharness/
 ├── tools/                        # 工具模块
 │   ├── Tool.java                 # 工具接口
 │   ├── ToolExecutor.java         # 工具执行器
-│   └── sales/                    # 销售相关工具
-│       ├── ProductQueryTool.java
-│       └── SalesScriptGenerator.java
+│   └── stock/                    # 股票咨询相关工具
+│       ├── StockQuoteTool.java
+│       ├── StockAnalysisTool.java
+│       ├── InvestorRiskAssessmentTool.java
+│       ├── MarketNewsTool.java
+│       └── InvestmentAdviceTool.java
 ├── config/                       # 配置类
 │   ├── AgentProperties.java      # 配置属性
 │   ├── ProviderConfig.java
@@ -434,17 +443,17 @@ src/main/resources/
 
 ---
 
-## 10. 销售场景工具
+## 10. 股票咨询场景工具
 
-针对销售Agent场景，设计以下核心工具：
+针对股票咨询Agent场景，设计以下核心工具：
 
 | 工具名 | 功能 | 参数 |
 |--------|------|------|
-| `queryProductInfo` | 查询产品信息 | `productId` |
-| `generateSalesScript` | 生成销售话术 | `productId`, `customerProfile` |
-| `analyzeCustomer` | 分析客户画像 | `customerId` |
-| `getSalesTips` | 获取销售建议 | `scenario`, `productId` |
-| `searchCompetitors` | 查询竞品信息 | `productCategory` |
+| `getStockQuote` | 获取股票实时行情 | `stockCode` |
+| `analyzeStock` | 分析股票（技术/基本面） | `stockCode`, `analysisType` |
+| `assessInvestorRisk` | 评估投资者风险偏好 | `investorInfo`, `investmentGoal` |
+| `getMarketNews` | 获取市场资讯 | `category`, `keyword` |
+| `generateInvestmentAdvice` | 生成投资建议 | `scenario`, `investorType`, `currentHoldings` |
 
 ---
 
@@ -472,5 +481,5 @@ src/main/resources/
 | Phase 1 | 基础框架搭建，ReAct循环 | 第1周 |
 | Phase 2 | 多Provider支持 | 第2周 |
 | Phase 3 | Hooks机制完善 | 第3周 |
-| Phase 4 | 销售工具开发 | 第4周 |
+| Phase 4 | 股票工具开发 | 第4周 |
 | Phase 5 | RAG长期记忆集成 | 第5-6周 |

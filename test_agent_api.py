@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 YHarness Agent API 测试脚本
-测试销售Agent框架的核心接口功能
+测试股票咨询Agent框架的核心接口功能
 """
 
 import requests
@@ -114,7 +114,7 @@ def test_new_conversation():
     print(f"\n{Color.GREEN}[测试2/8]{Color.END} 新建对话")
     try:
         payload = {
-            "message": "你好，我想了解一下CRM产品"
+            "message": "你好，我想咨询一下股票投资"
         }
         response = requests.post(f"{BASE_URL}/chat", json=payload, timeout=TIMEOUT)
         print_response(response)
@@ -136,7 +136,7 @@ def test_continue_conversation(conversation_id):
     try:
         payload = {
             "conversationId": conversation_id,
-            "message": "这个产品有哪些核心功能？"
+            "message": "我是一名稳健型投资者，有什么好的投资建议吗？"
         }
         response = requests.post(f"{BASE_URL}/chat", json=payload, timeout=TIMEOUT)
         print_response(response)
@@ -146,12 +146,12 @@ def test_continue_conversation(conversation_id):
         return False, None
 
 def test_tool_call(conversation_id):
-    """测试工具调用功能"""
-    print(f"\n{Color.GREEN}[测试4/8]{Color.END} 工具调用 - 查询产品信息")
+    """测试工具调用功能 - 股票行情"""
+    print(f"\n{Color.GREEN}[测试4/8]{Color.END} 工具调用 - 查询股票行情")
     try:
         payload = {
             "conversationId": conversation_id,
-            "message": "请帮我查询CRM-PRO产品的详细信息"
+            "message": "请帮我查询贵州茅台600519的实时行情"
         }
         response = requests.post(f"{BASE_URL}/chat", json=payload, timeout=TIMEOUT)
         print_response(response)
@@ -160,13 +160,13 @@ def test_tool_call(conversation_id):
         print(f"  {Color.RED}请求失败: {e}{Color.END}")
         return False, None
 
-def test_generate_sales_script(conversation_id):
-    """测试生成销售话术"""
-    print(f"\n{Color.GREEN}[测试5/8]{Color.END} 生成销售话术")
+def test_stock_analysis(conversation_id):
+    """测试股票分析功能"""
+    print(f"\n{Color.GREEN}[测试5/8]{Color.END} 股票分析")
     try:
         payload = {
             "conversationId": conversation_id,
-            "message": "帮我生成一个初次接触的销售话术，产品是CRM-PRO"
+            "message": "帮我分析一下600519这只股票，做个综合分析"
         }
         response = requests.post(f"{BASE_URL}/chat", json=payload, timeout=TIMEOUT)
         print_response(response)
@@ -207,12 +207,12 @@ def test_clear_context(conversation_id):
         print(f"  {Color.RED}请求失败: {e}{Color.END}")
         return False, None
 
-def test_customer_analysis():
-    """测试客户分析功能"""
-    print(f"\n{Color.GREEN}[测试8/8]{Color.END} 客户分析功能")
+def test_risk_assessment():
+    """测试风险评估功能"""
+    print(f"\n{Color.GREEN}[测试8/8]{Color.END} 投资者风险评估")
     try:
         payload = {
-            "message": "分析一下这个客户：张三，来自腾讯公司，担任技术总监，预算充足，主要痛点是客户管理效率低"
+            "message": "我今年35岁，年收入50万，有5年投资经验，风险承受能力中等，目标是资产增值"
         }
         response = requests.post(f"{BASE_URL}/chat", json=payload, timeout=TIMEOUT)
         print_response(response)
@@ -227,7 +227,7 @@ def test_customer_analysis():
 
 def run_all_tests():
     """运行所有测试"""
-    print_divider(f"{Color.HEADER}YHarness Agent API 测试套件{Color.END}", "═")
+    print_divider(f"{Color.HEADER}YHarness 股票咨询Agent API 测试套件{Color.END}", "═")
     
     results = []
     conversation_id = None
@@ -248,11 +248,11 @@ def run_all_tests():
         
         # 测试4: 工具调用
         success, _ = test_tool_call(conversation_id)
-        results.append(("工具调用", success))
+        results.append(("股票行情查询", success))
         
-        # 测试5: 生成销售话术
-        success, _ = test_generate_sales_script(conversation_id)
-        results.append(("生成销售话术", success))
+        # 测试5: 股票分析
+        success, _ = test_stock_analysis(conversation_id)
+        results.append(("股票分析", success))
         
         # 测试6: 获取上下文
         success, _ = test_get_context(conversation_id)
@@ -262,9 +262,9 @@ def run_all_tests():
         success, _ = test_clear_context(conversation_id)
         results.append(("清除上下文", success))
     
-    # 测试8: 客户分析
-    success, _ = test_customer_analysis()
-    results.append(("客户分析", success))
+    # 测试8: 风险评估
+    success, _ = test_risk_assessment()
+    results.append(("风险评估", success))
     
     # 输出测试报告
     print_divider(f"{Color.BOLD}测试报告{Color.END}", "═")

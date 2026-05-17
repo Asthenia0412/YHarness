@@ -16,8 +16,8 @@ public class AgentContext {
     private Map<String, Object> metadata = new HashMap<>();
     private String conversationId;
     
-    // 业务状态存储（销售场景专用）
-    private BusinessState businessState = new BusinessState();
+    // 业务状态存储（股票咨询场景专用）
+    private InvestmentState investmentState = new InvestmentState();
 
     public AgentContext() {
     }
@@ -90,11 +90,11 @@ public class AgentContext {
         this.conversationId = conversationId;
     }
 
-    public BusinessState getBusinessState() {
-        return businessState;
+    public InvestmentState getInvestmentState() {
+        return investmentState;
     }
 
-    public void setBusinessState(BusinessState businessState) {
-        this.businessState = businessState;
+    public void setInvestmentState(InvestmentState investmentState) {
+        this.investmentState = investmentState;
     }
 }

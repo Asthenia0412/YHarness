@@ -41,7 +41,7 @@ public class ToolExecutor {
         logger.info("═══════════════════════════════════════════════════════════════");
         logger.info("│ 工具名称: {}", toolName);
         logger.info("│ 会话ID: {}", context.getConversationId());
-        logger.info("│ 当前销售阶段: {}", context.getBusinessState().getCurrentStage().getDescription());
+        logger.info("│ 当前投资阶段: {}", context.getInvestmentState().getCurrentStage().getDescription());
         logger.info("│─────────────────────────────────────────────────────────────│");
         logger.info("│ 执行参数:");
         

@@ -82,7 +82,7 @@ public class AgentController {
                 response.put("conversationId", context.getConversationId());
                 response.put("messageCount", context.getMessages().size());
                 response.put("toolCount", context.getToolDefinitions().size());
-                response.put("salesStage", context.getBusinessState().getCurrentStage().getDescription());
+                response.put("investmentStage", context.getInvestmentState().getCurrentStage().getDescription());
             }
             
         } catch (Exception e) {
