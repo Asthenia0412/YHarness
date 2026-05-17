@@ -1,9 +1,9 @@
-
 package com.example.yharness.provider;
 
+import com.example.yharness.config.AgentProperties;
+import com.example.yharness.config.ProviderConfig;
 import com.example.yharness.context.AgentContext;
 import com.example.yharness.context.Message;
-import com.example.yharness.context.MessageRole;
 import com.example.yharness.context.ToolDefinition;
 import com.example.yharness.exception.ProviderException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,57 +27,77 @@ public class OpenAIProvider implements AIProvider {
     
     private final OkHttpClient client;
     private final ObjectMapper objectMapper;
-    private final String apiKey;
-    private final String baseUrl;
-    private final String model;
-    private final int maxTokens;
-    private final double temperature;
+    private final AgentProperties agentProperties;
 
-    public OpenAIProvider(ObjectMapper objectMapper) {
+    public OpenAIProvider(ObjectMapper objectMapper, AgentProperties agentProperties) {
         this.client = new OkHttpClient.Builder()
                 .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
                 .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
                 .build();
         this.objectMapper = objectMapper;
-        this.apiKey = System.getenv("AI_API_KEY");
-        this.baseUrl = "https://api.openai.com/v1";
-        this.model = "gpt-4o-mini";
-        this.maxTokens = 4096;
-        this.temperature = 0.7;
+        this.agentProperties = agentProperties;
     }
 
     @Override
     public String generate(AgentContext context) {
         try {
+            ProviderConfig config = agentProperties.getProvider();
+            String apiKey = getApiKey(config);
+            
+            if (apiKey == null || apiKey.isEmpty()) {
+                throw new ProviderException("API key not configured");
+            }
+
             RequestBody body = RequestBody.create(buildRequestBody(context), MediaType.parse("application/json"));
             
             Request request = new Request.Builder()
-                    .url(baseUrl + "/chat/completions")
+                    .url(config.getBaseUrl() + "/chat/completions")
                     .header("Authorization", "Bearer " + apiKey)
                     .header("Content-Type", "application/json")
                     .post(body)
                     .build();
 
+            logger.debug("Request URL: {}", request.url());
+            logger.debug("Request body: {}", buildRequestBody(context));
+
             try (Response response = client.newCall(request).execute()) {
                 if (!response.isSuccessful()) {
-                    throw new ProviderException("OpenAI API request failed: " + response.code());
+                    String errorBody = response.body() != null ? response.body().string() : "";
+                    logger.error("API request failed: {} - {}", response.code(), errorBody);
+                    throw new ProviderException("API request failed: " + response.code() + " - " + errorBody);
                 }
                 
                 String responseBody = response.body().string();
-                logger.debug("OpenAI response: {}", responseBody);
+                logger.debug("API response: {}", responseBody);
                 return parseResponse(responseBody);
             }
         } catch (IOException e) {
-            logger.error("Error calling OpenAI API", e);
-            throw new ProviderException("Error calling OpenAI API", e);
+            logger.error("Error calling API", e);
+            throw new ProviderException("Error calling API", e);
         }
     }
 
+    private String getApiKey(ProviderConfig config) {
+        String apiKey = config.getApiKey();
+        if (apiKey == null || apiKey.isEmpty()) {
+            apiKey = System.getenv("AI_API_KEY");
+        }
+        return apiKey;
+    }
+
     private String buildRequestBody(AgentContext context) throws JsonProcessingException {
+        ProviderConfig config = agentProperties.getProvider();
         Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("model", model);
-        requestBody.put("max_tokens", maxTokens);
-        requestBody.put("temperature", temperature);
+        
+        requestBody.put("model", config.getModel());
+        requestBody.put("max_tokens", config.getMaxTokens());
+        requestBody.put("temperature", config.getTemperature());
+        requestBody.put("stream", false);
+
+        if (isDeepSeekModel(config.getModel())) {
+            requestBody.put("thinking", Collections.singletonMap("type", "enabled"));
+            requestBody.put("reasoning_effort", "high");
+        }
 
         List<Map<String, Object>> messages = new ArrayList<>();
         
@@ -104,6 +125,10 @@ public class OpenAIProvider implements AIProvider {
         }
 
         return objectMapper.writeValueAsString(requestBody);
+    }
+
+    private boolean isDeepSeekModel(String model) {
+        return model != null && model.toLowerCase().contains("deepseek");
     }
 
     private String buildSystemContent(AgentContext context) {
@@ -182,6 +207,6 @@ public class OpenAIProvider implements AIProvider {
 
     @Override
     public String getName() {
-        return "OpenAI";
+        return "OpenAI Compatible";
     }
 }

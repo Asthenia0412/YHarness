@@ -1,13 +1,12 @@
-
 server:
   port: 8080
 
 yharness:
   provider:
     type: OPENAI
-    api-key: ${AI_API_KEY}
-    base-url: https://api.openai.com/v1
-    model: gpt-4o-mini
+    api-key: sk-2ad41991aa564787bde70458aaf1efec
+    base-url: https://api.deepseek.com
+    model: deepseek-v4-pro
     timeout: 30000
     max-tokens: 4096
     temperature: 0.7

@@ -4,7 +4,6 @@ package com.example.yharness;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-
 import com.example.yharness.config.AgentProperties;
 
 @SpringBootApplication
