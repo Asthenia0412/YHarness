@@ -2,8 +2,6 @@ package com.yancy.yharness.config;
 
 import com.yancy.yharness.hooks.AgentHook;
 import com.yancy.yharness.hooks.HookManager;
-import com.yancy.yharness.hooks.impl.LoggingHook;
-import com.yancy.yharness.hooks.impl.MetricsHook;
 import com.yancy.yharness.provider.MockProvider;
 import com.yancy.yharness.provider.ProviderFactory;
 import com.yancy.yharness.scheduler.Dispatcher;
@@ -56,16 +54,16 @@ public class AppConfig {
         return registry;
     }
 
-    @EventListener(ApplicationReadyEvent.class)
-    public void onApplicationReady(Dispatcher dispatcher,
-                                    AgentProperties agentProperties,
-                                    BaseToolRegistry toolRegistry,
-                                    DomainToolRegistry domainRegistry,
-                                    List<Tool> toolBeans) {
-        for (Tool tool : toolBeans) {
-            toolRegistry.register(tool);
-            log.info("Registered tool: {}", tool.getName());
-        }
+    @EventListener
+    public void onApplicationReady(ApplicationReadyEvent event) {
+        org.springframework.context.ApplicationContext ctx = event.getApplicationContext();
+        Dispatcher dispatcher = ctx.getBean(Dispatcher.class);
+        AgentProperties agentProperties = ctx.getBean(AgentProperties.class);
+        BaseToolRegistry toolRegistry = ctx.getBean(BaseToolRegistry.class);
+        DomainToolRegistry domainRegistry = ctx.getBean(DomainToolRegistry.class);
+
+        java.util.Collection<Tool> tools = ctx.getBeansOfType(Tool.class).values();
+        toolRegistry.registerAll(tools.stream().toList());
         domainRegistry.autoMapByDefinition();
 
         dispatcher.start(agentProperties.getScheduler().getPollIntervalMs());

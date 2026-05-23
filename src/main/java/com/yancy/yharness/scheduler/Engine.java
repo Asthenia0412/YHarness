@@ -1,10 +1,7 @@
 package com.yancy.yharness.scheduler;
 
-import com.yancy.yharness.core.Agent;
-import com.yancy.yharness.model.AgentRequest;
 import com.yancy.yharness.model.AgentResponse;
-import com.yancy.yharness.model.TaskType;
-import com.yancy.yharness.preparer.RequestPreparer;
+import com.yancy.yharness.pipeline.DispatchPipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -16,15 +13,13 @@ public class Engine {
     private static final Logger log = LoggerFactory.getLogger(Engine.class);
     private final Planner planner;
     private final MockRedisQueue redisQueue;
-    private final RequestPreparer requestPreparer;
-    private final Agent agent;
+    private final DispatchPipeline dispatchPipeline;
 
     public Engine(Planner planner, MockRedisQueue redisQueue,
-                  RequestPreparer requestPreparer, Agent agent) {
+                  DispatchPipeline dispatchPipeline) {
         this.planner = planner;
         this.redisQueue = redisQueue;
-        this.requestPreparer = requestPreparer;
-        this.agent = agent;
+        this.dispatchPipeline = dispatchPipeline;
     }
 
     public void process(Long jobId) {
@@ -45,8 +40,7 @@ public class Engine {
             job.setStatus("PROCESSING");
             job.setUpdatedAt(LocalDateTime.now());
 
-            AgentRequest request = requestPreparer.prepare(job);
-            AgentResponse response = agent.handle(request);
+            AgentResponse response = dispatchPipeline.dispatchJob(job);
 
             job.setStatus("DONE");
             job.setUpdatedAt(LocalDateTime.now());
@@ -55,7 +49,8 @@ public class Engine {
             redisQueue.releaseLease(String.valueOf(jobId));
             redisQueue.remove(String.valueOf(jobId));
 
-            log.info("Job {} completed successfully", jobId);
+            log.info("Job {} completed successfully: replyLength={}", jobId,
+                    response.getFinalReply() != null ? response.getFinalReply().length() : 0);
         } catch (Exception e) {
             log.error("Job {} failed: {}", jobId, e.getMessage());
             job.setStatus("FAILED");

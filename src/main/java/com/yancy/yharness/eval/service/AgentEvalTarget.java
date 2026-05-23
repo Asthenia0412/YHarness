@@ -3,13 +3,12 @@ package com.yancy.yharness.eval.service;
 import com.yancy.yharness.config.AgentProperties;
 import com.yancy.yharness.eval.EvalInvokeResult;
 import com.yancy.yharness.eval.EvalTarget;
-import com.yancy.yharness.core.Agent;
 import com.yancy.yharness.model.AgentRequest;
 import com.yancy.yharness.model.AgentResponse;
 import com.yancy.yharness.model.TaskType;
 import com.yancy.yharness.context.AgentContext;
 import com.yancy.yharness.eval.guard.EvalGuard;
-import org.springframework.beans.factory.ObjectProvider;
+import com.yancy.yharness.pipeline.DispatchPipeline;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -18,12 +17,12 @@ import java.util.UUID;
 
 @Component
 public class AgentEvalTarget implements EvalTarget {
-    private final ObjectProvider<Agent> agentProvider;
+    private final DispatchPipeline dispatchPipeline;
     private final String agentId;
     private final String agentName;
 
-    public AgentEvalTarget(ObjectProvider<Agent> agentProvider, AgentProperties properties) {
-        this.agentProvider = agentProvider;
+    public AgentEvalTarget(DispatchPipeline dispatchPipeline, AgentProperties properties) {
+        this.dispatchPipeline = dispatchPipeline;
         this.agentId = properties.getAgent().getAgentId();
         this.agentName = "SalesAgent Evaluation";
     }
@@ -52,10 +51,8 @@ public class AgentEvalTarget implements EvalTarget {
             request.setUserMessage(userMessage);
             request.setTaskType(TaskType.INBOUND);
 
-            Agent agent = agentProvider.getObject();
-
             long start = System.currentTimeMillis();
-            AgentResponse response = agent.handle(request);
+            AgentResponse response = dispatchPipeline.dispatchDirect(request);
             long elapsed = System.currentTimeMillis() - start;
 
             EvalInvokeResult result = new EvalInvokeResult();
