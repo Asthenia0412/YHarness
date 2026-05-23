@@ -1,5 +1,8 @@
 package com.yancy.yharness.tools;
 
+import lombok.Data;
+
+@Data
 public class ToolResult {
     private boolean success;
     private String code;
@@ -8,8 +11,6 @@ public class ToolResult {
     private boolean retryable;
     private boolean userVisible;
     private String summary;
-
-    public ToolResult() {}
 
     public static ToolResult success(Object data, String summary) {
         ToolResult result = new ToolResult();
@@ -31,19 +32,4 @@ public class ToolResult {
         result.setUserVisible(true);
         return result;
     }
-
-    public boolean isSuccess() { return success; }
-    public void setSuccess(boolean success) { this.success = success; }
-    public String getCode() { return code; }
-    public void setCode(String code) { this.code = code; }
-    public String getMessage() { return message; }
-    public void setMessage(String message) { this.message = message; }
-    public Object getData() { return data; }
-    public void setData(Object data) { this.data = data; }
-    public boolean isRetryable() { return retryable; }
-    public void setRetryable(boolean retryable) { this.retryable = retryable; }
-    public boolean isUserVisible() { return userVisible; }
-    public void setUserVisible(boolean userVisible) { this.userVisible = userVisible; }
-    public String getSummary() { return summary; }
-    public void setSummary(String summary) { this.summary = summary; }
 }

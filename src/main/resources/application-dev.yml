@@ -1,0 +1,44 @@
+server:
+  port: 8080
+
+yharness:
+  agent:
+    agent-id: "yharness-sales-agent-v1"
+
+  provider:
+    type: "MOCK"                     # 生产环境需改为 OPENAI / AZURE / BEDROCK 等
+    api-key: "xxx"                   # 从 .env 或环境变量 YHARNESS_API_KEY 注入
+    base-url: "https://api.xxx.com"  # 从 .env 或环境变量 YHARNESS_BASE_URL 注入
+    model: "gpt-4o"                  # 从 .env 或环境变量 YHARNESS_MODEL 注入
+    timeout: 30000
+    max-tokens: 4096
+    temperature: 0.7
+
+  context:
+    max-messages: 50
+    compression-enabled: true
+    sliding-window-size: 10
+    compress-trigger-size: 20
+
+  hooks:
+    enabled: true
+
+  react:
+    max-iterations: 10
+    enable-thinking: true
+
+  memory:
+    conversation-ttl-seconds: 86400
+    story-ttl-seconds: 86400
+    checkpoint-ttl-seconds: 3600
+
+  scheduler:
+    poll-interval-ms: 5000
+    lease-ttl-seconds: 30
+    max-batch-size: 100
+
+  eval:
+    enabled: true
+
+  mock:
+    enabled: true

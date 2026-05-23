@@ -4,6 +4,7 @@ import com.yancy.yharness.core.Agent;
 import com.yancy.yharness.model.AgentRequest;
 import com.yancy.yharness.model.AgentResponse;
 import com.yancy.yharness.model.TaskType;
+import lombok.Data;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -49,19 +50,11 @@ public class AgentController {
         );
     }
 
+    @Data
     public static class ChatRequest {
         private String userId;
         private String conversationId;
         private String message;
         private String language;
-
-        public String getUserId() { return userId; }
-        public void setUserId(String userId) { this.userId = userId; }
-        public String getConversationId() { return conversationId; }
-        public void setConversationId(String conversationId) { this.conversationId = conversationId; }
-        public String getMessage() { return message; }
-        public void setMessage(String message) { this.message = message; }
-        public String getLanguage() { return language; }
-        public void setLanguage(String language) { this.language = language; }
     }
 }

@@ -1,5 +1,10 @@
 package com.yancy.yharness.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class TokenUsage {
     private int promptTokens;
     private int completionTokens;
@@ -12,13 +17,6 @@ public class TokenUsage {
         this.completionTokens = completionTokens;
         this.totalTokens = promptTokens + completionTokens;
     }
-
-    public int getPromptTokens() { return promptTokens; }
-    public void setPromptTokens(int promptTokens) { this.promptTokens = promptTokens; }
-    public int getCompletionTokens() { return completionTokens; }
-    public void setCompletionTokens(int completionTokens) { this.completionTokens = completionTokens; }
-    public int getTotalTokens() { return totalTokens; }
-    public void setTotalTokens(int totalTokens) { this.totalTokens = totalTokens; }
 
     public void add(TokenUsage other) {
         this.promptTokens += other.promptTokens;

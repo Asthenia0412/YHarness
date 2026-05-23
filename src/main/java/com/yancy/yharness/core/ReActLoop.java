@@ -5,7 +5,9 @@ import com.yancy.yharness.model.ToolCallRecord;
 import com.yancy.yharness.model.TokenUsage;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ReActLoop {
     private final ModelProvider modelProvider;
@@ -85,7 +87,7 @@ public class ReActLoop {
         List<ToolDefinition> toolDefs = new ArrayList<>();
         if (input.getToolDefinitions() != null) {
             for (com.yancy.yharness.tools.ToolDefinition def : input.getToolDefinitions()) {
-                ToolDefinition td = new ToolDefinition(def.getName(), def.getDescription());
+                ToolDefinition td = new ToolDefinition(def.getName(), def.getDescription(),new HashMap<String,Object>());
                 td.setInputSchema(def.getInputSchema());
                 toolDefs.add(td);
             }
@@ -121,7 +123,7 @@ public class ReActLoop {
         List<ToolDefinition> toolDefs = new ArrayList<>();
         if (input.getToolDefinitions() != null) {
             for (com.yancy.yharness.tools.ToolDefinition def : input.getToolDefinitions()) {
-                ToolDefinition td = new ToolDefinition(def.getName(), def.getDescription());
+                ToolDefinition td = new ToolDefinition(def.getName(), def.getDescription(),new HashMap<>());
                 td.setInputSchema(def.getInputSchema());
                 toolDefs.add(td);
             }
