@@ -1,117 +1,86 @@
-
 package com.yancy.yharness.hooks.impl;
 
 import com.yancy.yharness.context.AgentContext;
-import com.yancy.yharness.core.Action;
-import com.yancy.yharness.core.Thought;
+import com.yancy.yharness.core.AgentState;
 import com.yancy.yharness.hooks.AgentHook;
+import com.yancy.yharness.hooks.HookType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Component
 public class MetricsHook implements AgentHook {
-
-    private static final Logger logger = LoggerFactory.getLogger(MetricsHook.class);
-    
-    private final Map<String, Long> reactStartTimes = new ConcurrentHashMap<>();
-    private final Map<String, Integer> messageCounts = new ConcurrentHashMap<>();
-    private final Map<String, Integer> toolCallCounts = new ConcurrentHashMap<>();
-    private long totalMessages = 0;
-    private long totalToolCalls = 0;
-    private long totalReActLoops = 0;
-    private long totalReActDuration = 0;
+    private static final Logger log = LoggerFactory.getLogger(MetricsHook.class);
+    private final Map<String, AtomicLong> toolCallCounts = new ConcurrentHashMap<>();
+    private final AtomicLong totalModelCalls = new AtomicLong(0);
+    private final AtomicLong totalErrors = new AtomicLong(0);
 
     @Override
-    public void onAgentStart(AgentContext context) {
-        messageCounts.put(context.getConversationId(), 0);
-        toolCallCounts.put(context.getConversationId(), 0);
-    }
+    public String getName() { return "MetricsHook"; }
 
     @Override
-    public void onAgentEnd(AgentContext context) {
-        messageCounts.remove(context.getConversationId());
-        toolCallCounts.remove(context.getConversationId());
-        reactStartTimes.remove(context.getConversationId());
+    public HookType getType() { return HookType.AFTER_TOOL_CALL; }
+
+    @Override
+    public void onSessionStart(AgentContext context, AgentState state) {
+        log.info("[Metrics] Session started");
     }
 
     @Override
-    public void onContextInit(AgentContext context) {
+    public void onContextAssembling(AgentContext context) {}
+
+    @Override
+    public void onMemoryRetrieved(AgentContext context) {}
+
+    @Override
+    public void onBeforeModelCall(AgentContext context, AgentState state) {
+        totalModelCalls.incrementAndGet();
     }
 
     @Override
-    public void onContextUpdate(AgentContext context) {
+    public void onAfterModelCall(AgentContext context, AgentState state, String modelResponse) {}
+
+    @Override
+    public void onBeforeToolCall(AgentContext context, AgentState state, String toolName) {
+        toolCallCounts.computeIfAbsent(toolName, k -> new AtomicLong(0)).incrementAndGet();
     }
 
     @Override
-    public void onMessageReceived(AgentContext context, String message) {
-        messageCounts.merge(context.getConversationId(), 1, Integer::sum);
-        totalMessages++;
+    public void onAfterToolCall(AgentContext context, AgentState state, String toolName, String result) {}
+
+    @Override
+    public void onBeforeSessionSummarize(AgentContext context, AgentState state) {}
+
+    @Override
+    public void onConversationUpdated(AgentContext context) {}
+
+    @Override
+    public void onStoryUpdated(AgentContext context) {}
+
+    @Override
+    public void onSessionEnd(AgentContext context, AgentState state) {
+        log.info("[Metrics] Session ended - modelCalls: {}, toolCalls: {}, totalTokens: {}, elapsedMs: {}",
+                totalModelCalls.get(), toolCallCounts.values().stream().mapToLong(AtomicLong::get).sum(),
+                state.getPerfState().getTokenUsage().getTotalTokens(),
+                state.getPerfState().getElapsedMs());
     }
 
     @Override
-    public void onMessageSend(AgentContext context, String message) {
+    public void onError(AgentContext context, AgentState state, Throwable error) {
+        totalErrors.incrementAndGet();
+        log.warn("[Metrics] Error count: {}", totalErrors.get());
     }
 
-    @Override
-    public void onToolCall(AgentContext context, Action action) {
-        toolCallCounts.merge(context.getConversationId(), 1, Integer::sum);
-        totalToolCalls++;
+    public Map<String, Long> getToolCallCounts() {
+        Map<String, Long> result = new ConcurrentHashMap<>();
+        toolCallCounts.forEach((k, v) -> result.put(k, v.get()));
+        return result;
     }
 
-    @Override
-    public void onToolResult(AgentContext context, String result) {
-    }
-
-    @Override
-    public void onProviderCall(AgentContext context) {
-    }
-
-    @Override
-    public void onProviderResponse(AgentContext context, String response) {
-    }
-
-    @Override
-    public void onError(AgentContext context, Exception exception) {
-    }
-
-    @Override
-    public void onReActStart(AgentContext context) {
-        reactStartTimes.put(context.getConversationId(), System.currentTimeMillis());
-    }
-
-    @Override
-    public void onReActEnd(AgentContext context, long durationMs) {
-        reactStartTimes.remove(context.getConversationId());
-        totalReActLoops++;
-        totalReActDuration += durationMs;
-    }
-
-    @Override
-    public void onThoughtGenerated(AgentContext context, Thought thought) {
-    }
-
-    public Map<String, Object> getMetrics() {
-        Map<String, Object> metrics = new HashMap<>();
-        metrics.put("totalMessages", totalMessages);
-        metrics.put("totalToolCalls", totalToolCalls);
-        metrics.put("totalReActLoops", totalReActLoops);
-        metrics.put("averageReActDuration", totalReActLoops > 0 ? totalReActDuration / totalReActLoops : 0);
-        metrics.put("activeConversations", messageCounts.size());
-        return metrics;
-    }
-
-    public void logMetrics() {
-        logger.info("=== Agent Metrics ===");
-        logger.info("Total Messages: {}", totalMessages);
-        logger.info("Total Tool Calls: {}", totalToolCalls);
-        logger.info("Total ReAct Loops: {}", totalReActLoops);
-        logger.info("Average ReAct Duration: {}ms", totalReActLoops > 0 ? totalReActDuration / totalReActLoops : 0);
-        logger.info("Active Conversations: {}", messageCounts.size());
-        logger.info("====================");
-    }
+    public long getTotalModelCalls() { return totalModelCalls.get(); }
+    public long getTotalErrors() { return totalErrors.get(); }
 }

@@ -1,100 +1,109 @@
-
 package com.yancy.yharness.context;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import com.yancy.yharness.memory.Conversation;
+import com.yancy.yharness.memory.Story;
+import com.yancy.yharness.memory.MemoryService;
+import com.yancy.yharness.tools.ToolDefinition;
+
 import java.util.List;
-import java.util.Map;
 
 public class AgentContext {
-    
     private String systemPrompt;
-    private List<Message> messages = new ArrayList<>();
-    private List<ToolDefinition> toolDefinitions = new ArrayList<>();
-    private LongTermMemory longTermMemory = new LongTermMemory();
-    private String toolExecutionResult;
-    private Map<String, Object> metadata = new HashMap<>();
+    private String userId;
     private String conversationId;
-    
-    // 业务状态存储（股票咨询场景专用）
-    private InvestmentState investmentState = new InvestmentState();
+    private String sessionId;
+    private String userMessage;
+    private Story story;
+    private Conversation conversation;
+    private List<ToolDefinition> visibleTools;
+    private List<String> businessFacts;
+    private List<String> knowledgeResults;
+    private String outputPolicy;
+    private String strategySummary;
+    private java.util.Map<String, Object> metadata;
 
-    public AgentContext() {
-    }
+    public String getSystemPrompt() { return systemPrompt; }
+    public void setSystemPrompt(String systemPrompt) { this.systemPrompt = systemPrompt; }
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
+    public String getConversationId() { return conversationId; }
+    public void setConversationId(String conversationId) { this.conversationId = conversationId; }
+    public String getSessionId() { return sessionId; }
+    public void setSessionId(String sessionId) { this.sessionId = sessionId; }
+    public String getUserMessage() { return userMessage; }
+    public void setUserMessage(String userMessage) { this.userMessage = userMessage; }
+    public Story getStory() { return story; }
+    public void setStory(Story story) { this.story = story; }
+    public Conversation getConversation() { return conversation; }
+    public void setConversation(Conversation conversation) { this.conversation = conversation; }
+    public List<ToolDefinition> getVisibleTools() { return visibleTools; }
+    public void setVisibleTools(List<ToolDefinition> visibleTools) { this.visibleTools = visibleTools; }
+    public List<String> getBusinessFacts() { return businessFacts; }
+    public void setBusinessFacts(List<String> businessFacts) { this.businessFacts = businessFacts; }
+    public List<String> getKnowledgeResults() { return knowledgeResults; }
+    public void setKnowledgeResults(List<String> knowledgeResults) { this.knowledgeResults = knowledgeResults; }
+    public String getOutputPolicy() { return outputPolicy; }
+    public void setOutputPolicy(String outputPolicy) { this.outputPolicy = outputPolicy; }
+    public String getStrategySummary() { return strategySummary; }
+    public void setStrategySummary(String strategySummary) { this.strategySummary = strategySummary; }
+    public java.util.Map<String, Object> getMetadata() { return metadata; }
+    public void setMetadata(java.util.Map<String, Object> metadata) { this.metadata = metadata; }
 
-    public String getSystemPrompt() {
-        return systemPrompt;
-    }
+    public String buildContextString() {
+        StringBuilder ctx = new StringBuilder();
 
-    public void setSystemPrompt(String systemPrompt) {
-        this.systemPrompt = systemPrompt;
-    }
+        ctx.append("# System\n").append(systemPrompt).append("\n\n");
 
-    public List<Message> getMessages() {
-        return messages;
-    }
+        ctx.append("# Current Session\n");
+        ctx.append("- user_id: ").append(userId).append("\n");
+        ctx.append("- conversation_id: ").append(conversationId).append("\n");
+        ctx.append("- session_id: ").append(sessionId).append("\n");
+        ctx.append("- current user input: ").append(userMessage).append("\n\n");
 
-    public void setMessages(List<Message> messages) {
-        this.messages = messages;
-    }
+        if (conversation != null) {
+            ctx.append("# Conversation Memory\n");
+            ctx.append(conversation.getSummary()).append("\n\n");
+        }
 
-    public void addMessage(Message message) {
-        this.messages.add(message);
-    }
+        if (story != null) {
+            ctx.append("# Story Memory\n");
+            ctx.append("- lead_stage: ").append(story.getLeadStage()).append("\n");
+            ctx.append("- language: ").append(story.getLanguage()).append("\n");
+            ctx.append("- interest_tags: ").append(story.getInterestTags()).append("\n\n");
+        }
 
-    public List<ToolDefinition> getToolDefinitions() {
-        return toolDefinitions;
-    }
+        if (businessFacts != null && !businessFacts.isEmpty()) {
+            ctx.append("# Business Facts\n");
+            for (String fact : businessFacts) {
+                ctx.append("- ").append(fact).append("\n");
+            }
+            ctx.append("\n");
+        }
 
-    public void setToolDefinitions(List<ToolDefinition> toolDefinitions) {
-        this.toolDefinitions = toolDefinitions;
-    }
+        if (knowledgeResults != null && !knowledgeResults.isEmpty()) {
+            ctx.append("# Knowledge Retrieval\n");
+            for (String kr : knowledgeResults) {
+                ctx.append("- ").append(kr).append("\n");
+            }
+            ctx.append("\n");
+        }
 
-    public void addToolDefinition(ToolDefinition toolDefinition) {
-        this.toolDefinitions.add(toolDefinition);
-    }
+        if (visibleTools != null && !visibleTools.isEmpty()) {
+            ctx.append("# Available Tools\n");
+            for (ToolDefinition td : visibleTools) {
+                ctx.append("- ").append(td.getName()).append(": ").append(td.getDescription()).append("\n");
+            }
+            ctx.append("\n");
+        }
 
-    public LongTermMemory getLongTermMemory() {
-        return longTermMemory;
-    }
+        if (outputPolicy != null) {
+            ctx.append("# Output Policy\n").append(outputPolicy).append("\n");
+        }
 
-    public void setLongTermMemory(LongTermMemory longTermMemory) {
-        this.longTermMemory = longTermMemory;
-    }
+        if (strategySummary != null) {
+            ctx.append("# Strategy\n").append(strategySummary).append("\n");
+        }
 
-    public String getToolExecutionResult() {
-        return toolExecutionResult;
-    }
-
-    public void setToolExecutionResult(String toolExecutionResult) {
-        this.toolExecutionResult = toolExecutionResult;
-    }
-
-    public Map<String, Object> getMetadata() {
-        return metadata;
-    }
-
-    public void setMetadata(Map<String, Object> metadata) {
-        this.metadata = metadata;
-    }
-
-    public void putMetadata(String key, Object value) {
-        this.metadata.put(key, value);
-    }
-
-    public String getConversationId() {
-        return conversationId;
-    }
-
-    public void setConversationId(String conversationId) {
-        this.conversationId = conversationId;
-    }
-
-    public InvestmentState getInvestmentState() {
-        return investmentState;
-    }
-
-    public void setInvestmentState(InvestmentState investmentState) {
-        this.investmentState = investmentState;
+        return ctx.toString();
     }
 }

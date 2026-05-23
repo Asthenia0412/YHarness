@@ -1,38 +1,26 @@
-
 package com.yancy.yharness.provider;
 
-import com.yancy.yharness.config.AgentProperties;
-import com.yancy.yharness.exception.AgentException;
-import org.springframework.stereotype.Component;
-
-@Component
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 public class ProviderFactory {
+    private final Map<String, ModelProvider> providers = new ConcurrentHashMap<>();
 
-    private final OpenAIProvider openAIProvider;
-    private final AnthropicProvider anthropicProvider;
-    private final AgentProperties agentProperties;
-
-    public ProviderFactory(OpenAIProvider openAIProvider, 
-                          AnthropicProvider anthropicProvider,
-                          AgentProperties agentProperties) {
-        this.openAIProvider = openAIProvider;
-        this.anthropicProvider = anthropicProvider;
-        this.agentProperties = agentProperties;
+    public void register(ModelProvider provider) {
+        providers.put(provider.getName(), provider);
     }
 
-    public AIProvider getProvider() {
-        String type = agentProperties.getProvider().getType();
-        return getProvider(ProviderType.fromValue(type));
+    public ModelProvider getProvider(String type) {
+        return providers.values().stream()
+                .filter(p -> p.supports(type))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("No provider found for type: " + type));
     }
 
-    public AIProvider getProvider(ProviderType type) {
-        switch (type) {
-            case OPENAI:
-                return openAIProvider;
-            case ANTHROPIC:
-                return anthropicProvider;
-            default:
-                throw new AgentException("Unsupported provider type: " + type);
+    public ModelProvider getProviderByName(String name) {
+        ModelProvider provider = providers.get(name);
+        if (provider == null) {
+            throw new IllegalArgumentException("No provider found with name: " + name);
         }
+        return provider;
     }
 }
