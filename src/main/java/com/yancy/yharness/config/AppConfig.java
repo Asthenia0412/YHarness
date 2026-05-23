@@ -17,11 +17,28 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
 
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+
 import java.util.List;
+import java.util.concurrent.Executor;
 
 @Configuration
 public class AppConfig {
     private static final Logger log = LoggerFactory.getLogger(AppConfig.class);
+
+    @Bean
+    public Executor agentExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(10);
+        executor.setMaxPoolSize(50);
+        executor.setQueueCapacity(200);
+        executor.setThreadNamePrefix("agent-exec-");
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(30);
+        executor.initialize();
+        log.info("Agent executor initialized: core=10, max=50, queue=200");
+        return executor;
+    }
 
     @Bean
     public MockProvider mockProvider() {
